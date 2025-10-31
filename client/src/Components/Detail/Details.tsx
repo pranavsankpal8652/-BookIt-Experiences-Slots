@@ -48,10 +48,12 @@ export default function ExperienceDetail() {
 
   console.log("selectedSlotAvl" + selectedSlotAvl);
 
+  const conn_string = import.meta.env.VITE_CONN_STRING;
+
   useEffect(() => {
     if (!id) return;
     axios
-      .get<Experience>(`http://localhost:3000/detail/experiences/${id}`)
+      .get<Experience>(`${conn_string}/detail/experiences/${id}`)
       .then((response) => {
         console.log(response.data);
         setExperience(response.data);

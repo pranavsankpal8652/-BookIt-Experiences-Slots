@@ -18,11 +18,12 @@ export default function HomePage() {
     []
   );
   const [loading, setLoading] = useState(true); // Loader state
+  const conn_string = import.meta.env.VITE_CONN_STRING;
 
   useEffect(() => {
     setLoading(true); // Show the loader when starting fetch
     axios
-      .get("http://localhost:3000/home/experiences")
+      .get(`${conn_string}/home/experiences`)
       .then((response) => {
         setExperiences(response.data);
         setPresentExperiences(response.data);

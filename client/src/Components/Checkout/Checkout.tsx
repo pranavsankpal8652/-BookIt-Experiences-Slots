@@ -19,11 +19,13 @@ export default function Checkout() {
   const [userName, setUserName] = useState("");
   const [email, setEmail] = useState("");
 
+  const conn_string = import.meta.env.VITE_CONN_STRING;
+
   var finalPrice = 0;
 
   const validatePromocode = () => {
     axios
-      .post("http://localhost:3000/checkout/promo/validate", {
+      .post(`${conn_string}/checkout/promo/validate`, {
         promoCode: promo,
       })
       .then((response) => {
@@ -72,7 +74,7 @@ export default function Checkout() {
       return;
     }
     axios
-      .post("http://localhost:3000/bookings/add", {
+      .post(`${conn_string}/bookings/add`, {
         id,
         data,
         userName,
