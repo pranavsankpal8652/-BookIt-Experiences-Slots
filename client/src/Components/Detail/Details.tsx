@@ -193,6 +193,11 @@ export default function ExperienceDetail() {
                   ))
                 )}
               </div>
+              <div className={`${!selectedDate ? "hidden" : ""}`}>
+                <p className="text-xs text-gray-500 my-3">
+                  All times are in IST (GMT +5:30)
+                </p>
+              </div>
 
               {/* ABOUT */}
               <div>
