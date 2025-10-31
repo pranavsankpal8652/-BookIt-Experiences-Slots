@@ -26,3 +26,33 @@ A full-stack **MERN application** where users can explore travel experiences, ch
 ```bash
 git clone https://github.com/your-username/travel-booking-app.git
 cd travel-booking-app
+
+2️⃣ Install Dependencies
+
+Backend:
+
+cd server
+npm install
+
+
+Frontend:
+
+cd ../client
+npm install
+
+▶️ Run the App
+
+Start the Backend:
+
+cd server
+npm start
+
+
+Start the Frontend:
+
+cd ../client
+npm run dev
+
+
+Open in browser:
+👉 http://localhost:5173/
