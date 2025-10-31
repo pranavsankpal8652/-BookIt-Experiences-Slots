@@ -30,11 +30,11 @@ export default function ExperienceDetail() {
   const navigate = useNavigate();
 
   const [experience, setExperience] = useState<Experience | null>(null);
+  const [loading, setLoading] = useState(true);
 
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("");
   const [selectedSlotAvl, setSelectedslotAvl] = useState<Number>(0);
-
   const [quantity, setQuantity] = useState(1);
 
   // Find times for selected date
@@ -50,6 +50,7 @@ export default function ExperienceDetail() {
 
   useEffect(() => {
     if (!id) return;
+    setLoading(true);
     axios
       .get<Experience>(`${conn_string}/detail/experiences/${id}`)
       .then((response) => {
@@ -57,13 +58,23 @@ export default function ExperienceDetail() {
       })
       .catch((error) => {
         console.error("Error fetching experience details:", error);
-      });
+      })
+      .finally(() => setLoading(false));
   }, [id]);
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-white text-gray-700">
+        <div className="w-12 h-12 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p className="text-lg font-medium">Loading experience details...</p>
+      </div>
+    );
+  }
 
   if (!experience) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="loader"></div>
+      <div className="flex items-center justify-center min-h-screen text-red-600 text-lg font-semibold">
+        Failed to load experience details.
       </div>
     );
   }
@@ -93,7 +104,7 @@ export default function ExperienceDetail() {
       {/* Back Button */}
       <div className="flex items-center gap-2 font-medium text-lg mx-30 mt-4 mb-6">
         <button
-          className=" cursor-pointer hover:text-yellow-500 transition"
+          className="cursor-pointer hover:text-yellow-500 transition"
           onClick={() => navigate(-1)}
           aria-label="Go back"
         >
@@ -119,31 +130,32 @@ export default function ExperienceDetail() {
                 {experience.name}
               </h1>
               <p className="text-[#6C6C6C] mb-6">{experience.description}</p>
+
               {/* Date Boxes */}
               <div className="text-[#161616] my-4">Choose Date</div>
               <div className="flex flex-wrap gap-4 mb-4">
-                {experience &&
-                  experience.slots?.map(({ date }) => (
-                    <button
-                      key={date}
-                      type="button"
-                      onClick={() => {
-                        setSelectedDate(date);
-                        setSelectedTime("");
-                      }}
-                      className={`px-4 py-2 rounded-lg border ${
-                        selectedDate === date
-                          ? "bg-yellow-400 text-white border-yellow-400"
-                          : "bg-white border-gray-300"
-                      }`}
-                    >
-                      {new Date(date).toLocaleString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                      })}
-                    </button>
-                  ))}
+                {experience.slots?.map(({ date }) => (
+                  <button
+                    key={date}
+                    type="button"
+                    onClick={() => {
+                      setSelectedDate(date);
+                      setSelectedTime("");
+                    }}
+                    className={`px-4 py-2 rounded-lg border ${
+                      selectedDate === date
+                        ? "bg-yellow-400 text-white border-yellow-400"
+                        : "bg-white border-gray-300"
+                    }`}
+                  >
+                    {new Date(date).toLocaleString("en-US", {
+                      month: "short",
+                      day: "numeric",
+                    })}
+                  </button>
+                ))}
               </div>
+
               {/* Time Boxes */}
               <div className="text-[#161616] my-4">Choose Time</div>
               <div className="flex flex-wrap gap-4 mb-6">
@@ -181,6 +193,7 @@ export default function ExperienceDetail() {
                   ))
                 )}
               </div>
+
               {/* ABOUT */}
               <div>
                 <h2 className="text-lg font-semibold mb-2 text-gray-800">
@@ -201,7 +214,7 @@ export default function ExperienceDetail() {
                 <span className="text-[#161616]">₹{experience.price}</span>
               </div>
 
-              <div className="flex items-center  justify-between">
+              <div className="flex items-center justify-between">
                 <span className="text-[#656565]">Quantity</span>
                 <div className="flex gap-0">
                   <button
@@ -216,9 +229,6 @@ export default function ExperienceDetail() {
                     min={1}
                     value={quantity}
                     readOnly
-                    onChange={(e) =>
-                      setQuantity(Math.max(1, Number(e.target.value)))
-                    }
                     className="rounded-lg w-8 px-2 py-1 text-center text-[#161616] outline-none"
                   />
                   <button
@@ -266,23 +276,6 @@ export default function ExperienceDetail() {
           </div>
         </div>
       </div>
-
-      {/* Circular Spinner CSS */}
-      <style>{`
-        .loader {
-          border: 6px solid #f3f3f3;
-          border-top: 6px solid #FFD643;
-          border-radius: 50%;
-          width: 40px;
-          height: 40px;
-          animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
     </div>
   );
 }
