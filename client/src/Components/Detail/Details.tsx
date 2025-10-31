@@ -46,8 +46,6 @@ export default function ExperienceDetail() {
   const subtotal = price * quantity;
   const total = subtotal + tax;
 
-  console.log("selectedSlotAvl" + selectedSlotAvl);
-
   const conn_string = import.meta.env.VITE_CONN_STRING;
 
   useEffect(() => {
@@ -55,7 +53,6 @@ export default function ExperienceDetail() {
     axios
       .get<Experience>(`${conn_string}/detail/experiences/${id}`)
       .then((response) => {
-        console.log(response.data);
         setExperience(response.data);
       })
       .catch((error) => {
@@ -64,7 +61,11 @@ export default function ExperienceDetail() {
   }, [id]);
 
   if (!experience) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="loader">Loading...</div>
+      </div>
+    );
   }
 
   const data = {
@@ -265,6 +266,20 @@ export default function ExperienceDetail() {
           </div>
         </div>
       </div>
+      <style>{`
+        .loader {
+          border: 4px solid #f3f3f3;
+          border-top: 4px solid #FFD643;
+          border-radius: 50%;
+          width: 36px;
+          height: 36px;
+          animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }

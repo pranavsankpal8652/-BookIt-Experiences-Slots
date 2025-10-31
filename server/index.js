@@ -10,6 +10,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
+app.get("/", (req, res) => {
+  res.send("Server Started");
+});
+
 const HomeRoutes = require("./app/routes/HomeRoutes");
 const ExperienceDetailRoutes = require("./app/routes/ExperienceDetailRoutes");
 const CheckOutRoutes = require("./app/routes/CheckOutRoutes");
