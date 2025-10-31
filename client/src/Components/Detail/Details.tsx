@@ -63,7 +63,7 @@ export default function ExperienceDetail() {
   if (!experience) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="loader">Loading...</div>
+        <div className="loader"></div>
       </div>
     );
   }
@@ -266,15 +266,18 @@ export default function ExperienceDetail() {
           </div>
         </div>
       </div>
+
+      {/* Circular Spinner CSS */}
       <style>{`
         .loader {
-          border: 4px solid #f3f3f3;
-          border-top: 4px solid #FFD643;
+          border: 6px solid #f3f3f3;
+          border-top: 6px solid #FFD643;
           border-radius: 50%;
-          width: 36px;
-          height: 36px;
+          width: 40px;
+          height: 40px;
           animation: spin 1s linear infinite;
         }
+
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
