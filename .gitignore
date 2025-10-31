@@ -1,6 +1,7 @@
 # =========================
 # Node.js / Express (Server)
 # =========================
+.gitignore
 node_modules/
 npm-debug.log*
 yarn-debug.log*
