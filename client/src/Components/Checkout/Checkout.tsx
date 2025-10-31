@@ -5,118 +5,154 @@ import { FaArrowLeft } from "react-icons/fa";
 import axios from "axios";
 import Swal from "sweetalert2";
 
+// ---------- TYPES ----------
+interface Discount {
+  type: "percentage" | "fixed";
+  value: number;
+}
+
+interface PromoResponse {
+  valid: boolean;
+  msg: string;
+  discount?: Discount;
+}
+
+interface LocationState {
+  Experince: string;
+  date: string;
+  time: string;
+  quantity: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+}
+
+interface BookingResponse {
+  ref_id: string;
+  msg: string;
+}
+
+// ---------- COMPONENT ----------
 export default function Checkout() {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  const data = location.state;
-  const [TotalPrice, setTotalPrice] = useState(data.total);
+  const data = location.state as LocationState;
 
-  const [promo, setPromo] = useState("");
-  const [PromoCodeApplied, setPromoCodeApplied] = useState(false);
+  const [TotalPrice, setTotalPrice] = useState<number>(data.total);
+  const [promo, setPromo] = useState<string>("");
+  const [PromoCodeApplied, setPromoCodeApplied] = useState<boolean>(false);
+  const [agree, setAgree] = useState<boolean>(false);
+  const [userName, setUserName] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
 
-  const [agree, setAgree] = useState(false);
-  const [userName, setUserName] = useState("");
-  const [email, setEmail] = useState("");
+  const conn_string = import.meta.env.VITE_CONN_STRING as string;
+  let finalPrice = 0;
 
-  const conn_string = import.meta.env.VITE_CONN_STRING;
+  // ---------- PROMO VALIDATION ----------
+  const validatePromocode = async () => {
+    try {
+      const response = await axios.post<PromoResponse>(
+        `${conn_string}/checkout/promo/validate`,
+        { promoCode: promo }
+      );
 
-  var finalPrice = 0;
-
-  const validatePromocode = () => {
-    axios
-      .post(`${conn_string}/checkout/promo/validate`, {
-        promoCode: promo,
-      })
-      .then((response) => {
-        console.log("Promocode valid:", response.data);
-
-        if (response.data.valid) {
-          const discount = response.data.discount;
-          if (discount.type === "percentage") {
-            const discountAmount = (data.total * discount.value) / 100;
-            finalPrice = data.total - discountAmount;
-          } else if (discount.type === "fixed") {
-            finalPrice = data.total - discount.value;
-          }
-          setTotalPrice(finalPrice);
-          setPromoCodeApplied(true);
-
-          Swal.fire({
-            icon: "success",
-            title: "Code Validated",
-            text: "Discount Applied Successfully",
-          });
-        } else {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: response.data.msg,
-          });
+      if (response.data.valid && response.data.discount) {
+        const discount = response.data.discount;
+        if (discount.type === "percentage") {
+          const discountAmount = (data.total * discount.value) / 100;
+          finalPrice = data.total - discountAmount;
+        } else if (discount.type === "fixed") {
+          finalPrice = data.total - discount.value;
         }
-      })
-      .catch((error) => {
-        console.error("Invalid promocode:", error);
-        // Show error message to user
+        setTotalPrice(finalPrice);
+        setPromoCodeApplied(true);
+        Swal.fire({
+          icon: "success",
+          title: "Code Validated",
+          text: "Discount Applied Successfully",
+        });
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Oops...",
+          text: response.data.msg,
+        });
+      }
+    } catch (error) {
+      console.error("Invalid promocode:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Invalid Code",
+        text: "Something went wrong while validating promo code.",
       });
+    }
   };
 
-  const handlePayment = (event: React.FormEvent) => {
-    event.preventDefault(); // prevent default form submit refresh
+  // ---------- PAYMENT HANDLER ----------
+  const handlePayment = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
     const emailPattern = /^\S+@\S+\.\S+$/;
 
     if (!userName || !email || !agree) {
-      alert("All fields are Required to Proceed!");
+      alert("All fields are required to proceed!");
       return;
     }
     if (!emailPattern.test(email)) {
       alert("Please enter a valid email address.");
       return;
     }
-    axios
-      .post(`${conn_string}/bookings/add`, {
-        id,
-        data,
-        userName,
-        email,
-      })
-      .then((response) => {
-        console.log("Payment successful:", response.data);
-        if (response.status == 200) {
-          navigate("/result", {
-            replace: true, // this prevents back navigation
-            state: { ref_id: response.data.ref_id, msg: response.data.msg },
-          });
-        } else {
-          navigate("/result", { state: { msg: response.data.msg } });
+
+    try {
+      const response = await axios.post<BookingResponse>(
+        `${conn_string}/bookings/add`,
+        {
+          id,
+          data,
+          userName,
+          email,
         }
-      })
-      .catch((error) => {
-        console.error("Payment failed:", error);
-        // Show error message to user
-      });
+      );
+
+      if (response.status === 200) {
+        navigate("/result", {
+          replace: true,
+          state: {
+            ref_id: response.data.ref_id,
+            msg: response.data.msg,
+          },
+        });
+      } else {
+        navigate("/result", { state: { msg: response.data.msg } });
+      }
+    } catch (error) {
+      console.error("Payment failed:", error);
+    }
   };
 
+  // ---------- JSX ----------
   return (
     <div className="min-h-screen bg-[#F9F9F9]">
       <Header />
 
-      <div className="max-w-[1350px] mx-auto px-4 sm:px-6 py-8">
+      <div className="max-w-[1350px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
         {/* Go Back */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-700 mb-6 font-medium"
+          className="flex items-center gap-2 text-gray-700 mb-4 sm:mb-6 font-medium"
         >
           <FaArrowLeft /> Checkout
         </button>
 
         <form
           onSubmit={handlePayment}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-22 items-start"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-10 items-start"
         >
           {/* LEFT SIDE */}
-          <div className="md:col-span-2 bg-[#EFEFEF] p-4 sm:p-6 rounded-2xl shadow-md w-4xl">
-            <h2 className="text-2xl font-semibold mb-6">Checkout</h2>
+          <div className="md:col-span-2 bg-[#EFEFEF] p-4 sm:p-6 rounded-2xl shadow-md w-full">
+            <h2 className="text-xl sm:text-2xl font-semibold mb-4 sm:mb-6">
+              Checkout
+            </h2>
 
             {/* Full Name & Email */}
             <div className="flex flex-col sm:flex-row items-center gap-4 w-full mb-4">
@@ -161,7 +197,7 @@ export default function Checkout() {
               />
               <button
                 type="button"
-                onClick={() => validatePromocode()}
+                onClick={validatePromocode}
                 disabled={PromoCodeApplied}
                 className="bg-black text-white px-4 py-2 rounded-lg font-medium hover:bg-yellow-500 transition w-full sm:w-auto disabled:hover:bg-black"
               >
@@ -175,7 +211,7 @@ export default function Checkout() {
                 type="checkbox"
                 checked={agree}
                 onChange={() => setAgree(!agree)}
-                className="w-4 h-4 accent-black "
+                className="w-4 h-4 accent-black"
                 required
               />
               <label className="text-sm text-gray-600 leading-tight">
@@ -223,6 +259,10 @@ export default function Checkout() {
             >
               Pay and Confirm
             </button>
+
+            <p className="text-xs text-gray-500 text-center mt-3">
+              All times are in IST (GMT +5:30)
+            </p>
           </div>
         </form>
       </div>
